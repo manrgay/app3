@@ -6,7 +6,7 @@ import 'cat.dart';
 
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'detail_page.dart';
 void main() {
   runApp(MyApp());
 }
@@ -283,21 +283,47 @@ class _HomePageState extends State<HomePage> {
       margin: EdgeInsets.symmetric(vertical: 8.0),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.person, size: 50, color: Colors.orange),
-            SizedBox(width: 16.0),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Name: ${custodian['name']}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text("Age: ${custodian['age']}"),
-                  Text("Gender: ${custodian['gender']}"),
-                  Text("Adopt: ${custodian['adopt']}"),
-                  Text("Phone: ${custodian['phone']}"),
-                  Text("Price: ${custodian['price']}"),
-                ],
+            Row(
+              children: [
+                Icon(Icons.pets, size: 50, color: Colors.orange),
+                SizedBox(width: 16.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Name: ${custodian['name']}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text("Age: ${custodian['age']}"),
+                      Text("Gender: ${custodian['gender']}"),
+                      Text("Adopt: ${custodian['adopt']}"),
+                      Text("Phone: ${custodian['phone']}"),
+                      Text("Price: ${custodian['price']}"),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: () {
+                  // เพิ่มการนำทางไปยังหน้ารายละเอียดเพิ่มเติม
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DetailPage(custodian: custodian),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                ),
+                child: Text("เพิ่มเติม", style: TextStyle(color: Colors.white)),
               ),
             ),
           ],
@@ -305,6 +331,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
 
 
   Widget _buildCategoryButton(String category, bool isSelected) {
