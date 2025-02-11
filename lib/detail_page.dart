@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:google_fonts/google_fonts.dart';
 
 class DetailPage extends StatefulWidget {
   final Map<String, dynamic> custodian;
@@ -77,7 +78,6 @@ class _DetailPageState extends State<DetailPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     String postId = widget.custodian['id'].toString();
@@ -98,19 +98,19 @@ class _DetailPageState extends State<DetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Name: ${widget.custodian['name']}", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text("Name: ${widget.custodian['name']}", style: GoogleFonts.sarabun(fontSize: 22, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
-            Text("Age: ${widget.custodian['age']}"),
-            Text("Gender: ${widget.custodian['gender']}"),
-            Text("Adopt: ${widget.custodian['adopt']}"),
-            Text("Phone: ${widget.custodian['phone']}"),
-            Text("Price: ${widget.custodian['price']}"),
+            Text("Age: ${widget.custodian['age']}", style: GoogleFonts.sarabun()),
+            Text("Gender: ${widget.custodian['gender']}", style: GoogleFonts.sarabun()),
+            Text("Adopt: ${widget.custodian['adopt']}", style: GoogleFonts.sarabun()),
+            Text("Phone: ${widget.custodian['phone']}", style: GoogleFonts.sarabun()),
+            Text("Price: ${widget.custodian['price']}", style: GoogleFonts.sarabun()),
             SizedBox(height: 20),
 
             // แสดงรายการความคิดเห็น
             Expanded(
               child: _comments.isEmpty
-                  ? Center(child: Text("ยังไม่มีความคิดเห็น"))
+                  ? Center(child: Text("ยังไม่มีความคิดเห็น", style: GoogleFonts.sarabun()))
                   : ListView.builder(
                 itemCount: _comments.length,
                 itemBuilder: (context, index) {
@@ -127,10 +127,13 @@ class _DetailPageState extends State<DetailPage> {
                         children: [
                           Text(
                             _comments[index]['name'],
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            style: GoogleFonts.sarabun(fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                           SizedBox(height: 6),
-                          Text(_comments[index]['comment']),
+                          Text(
+                            _comments[index]['comment'],
+                            style: GoogleFonts.sarabun(),
+                          ),
                           SizedBox(height: 6),
                           Text(
                             "โพสต์เมื่อ: ${_comments[index]['created_at']}",
@@ -159,6 +162,7 @@ class _DetailPageState extends State<DetailPage> {
                       fillColor: Colors.grey[200],
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.0)),
                     ),
+                    style: GoogleFonts.sarabun(), // ใช้ Sarabun ใน TextField
                   ),
                 ),
                 SizedBox(width: 8),
@@ -172,6 +176,7 @@ class _DetailPageState extends State<DetailPage> {
                       fillColor: Colors.grey[200],
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.0)),
                     ),
+                    style: GoogleFonts.sarabun(), // ใช้ Sarabun ใน TextField
                   ),
                 ),
                 SizedBox(width: 8),
@@ -180,7 +185,7 @@ class _DetailPageState extends State<DetailPage> {
                     addComment(_nameController.text, _commentController.text);
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                  child: Text("ส่ง"),
+                  child: Text("ส่ง", style: GoogleFonts.sarabun()),
                 ),
               ],
             ),
