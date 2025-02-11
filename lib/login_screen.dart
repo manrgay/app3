@@ -14,10 +14,25 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool isLoading = false;
+  bool rememberMe = false; // เพิ่มการจำรหัสผ่าน
 
   Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('jwt_token', token);
+
+    // ถ้าเลือก "Remember Me" ก็เก็บ email และ password ไว้ด้วย
+    if (rememberMe) {
+      prefs.setString('email', emailController.text);
+      prefs.setString('password', passwordController.text);
+    }
+  }
+
+  Future<void> loadSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey('email') && prefs.containsKey('password')) {
+      emailController.text = prefs.getString('email')!;
+      passwordController.text = prefs.getString('password')!;
+    }
   }
 
   Future<void> login() async {
@@ -69,6 +84,12 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    loadSavedCredentials(); // โหลดข้อมูลเมื่อเริ่มต้น
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
@@ -78,7 +99,6 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(height: 50),
-              // Logo
               Image.asset('assets/logo.png', height: 100), // Add your logo image here
               SizedBox(height: 20),
               Text(
@@ -121,7 +141,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Row(
                     children: [
-                      Checkbox(value: false, onChanged: (value) {}),
+                      Checkbox(
+                        value: rememberMe,
+                        onChanged: (value) {
+                          setState(() {
+                            rememberMe = value!;
+                          });
+                        },
+                      ),
                       Text("Remember Me"),
                     ],
                   ),
@@ -138,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   : ElevatedButton(
                 onPressed: login,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange, // แก้จาก primary เป็น backgroundColor
+                  backgroundColor: Colors.orange, // Change color
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -154,7 +181,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Don't you have an account yet? "),
+                  Text("Don't have an account? "),
                   TextButton(
                     onPressed: () {
                       Navigator.push(

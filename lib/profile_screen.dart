@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'login_screen.dart';
+import 'AvatarSelectionScreen.dart';  // นำเข้า AvatarSelectionScreen
+import 'AccountScreen.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -17,6 +19,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String errorMessage = '';
   File? _profileImage;
   TextEditingController passwordController = TextEditingController();
+  String? _avatarImagePath;  // เก็บเส้นทางของอวตารจาก assets
 
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -54,16 +57,84 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+  // บันทึกข้อมูลโปรไฟล์
+  Future<void> saveProfileImage(String imagePath) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('profile_image', imagePath);  // บันทึกเส้นทางของภาพ
+  }
 
-    if (pickedFile != null) {
-      setState(() {
-        _profileImage = File(pickedFile.path);
-      });
-      uploadProfileImage();
-    }
+  Future<void> saveAvatarImage(String avatarPath) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('avatar_image', avatarPath);  // บันทึกเส้นทางของอวตาร
+  }
+
+  // โหลดข้อมูลโปรไฟล์
+  Future<void> loadProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? savedProfileImage = prefs.getString('profile_image');
+    String? savedAvatarImage = prefs.getString('avatar_image');
+
+    setState(() {
+      if (savedProfileImage != null && savedProfileImage.isNotEmpty) {
+        _profileImage = File(savedProfileImage);  // โหลดภาพโปรไฟล์ที่บันทึกไว้
+      } else if (savedAvatarImage != null && savedAvatarImage.isNotEmpty) {
+        _avatarImagePath = savedAvatarImage;  // โหลดอวตารที่บันทึกไว้
+      }
+    });
+  }
+
+  Future<void> pickImage() async {
+    // สร้างตัวเลือกให้ผู้ใช้
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Select Profile Picture'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: Text('Choose Avatar'),
+              onTap: () async {
+                // นำทางไปยังหน้า AvatarSelectionScreen
+                String? selectedAvatar = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AvatarSelectionScreen(
+                      onAvatarSelected: (avatarPath) {
+                        setState(() {
+                          _avatarImagePath = avatarPath;  // อัพเดทค่าของอวตาร
+                          _profileImage = null;  // ลบค่าภาพที่เลือกจากแกลเลอรี
+                        });
+                        saveAvatarImage(avatarPath);  // บันทึกอวตารที่เลือก
+                        uploadProfileImage();
+                      },
+                    ),
+                  ),
+                );
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: Text('Pick from Gallery'),
+              onTap: () async {
+                // ให้ผู้ใช้เลือกภาพจากแกลเลอรี
+                final picker = ImagePicker();
+                final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+                if (pickedFile != null) {
+                  setState(() {
+                    _profileImage = File(pickedFile.path);
+                    _avatarImagePath = null; // ลบค่าของอวตารจาก assets
+                  });
+                  saveProfileImage(pickedFile.path);  // บันทึกเส้นทางของภาพโปรไฟล์
+                  uploadProfileImage();
+                }
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> uploadProfileImage() async {
@@ -79,7 +150,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     var request = http.MultipartRequest('POST', Uri.parse('http://10.0.2.2:3000/upload_profile'));
     request.headers['Authorization'] = 'Bearer $token';
 
-    request.files.add(await http.MultipartFile.fromPath('file', _profileImage!.path));
+    if (_profileImage != null) {
+      request.files.add(await http.MultipartFile.fromPath('file', _profileImage!.path));
+    } else if (_avatarImagePath != null) {
+      // ส่งอวตารจาก assets
+      setState(() {
+        errorMessage = 'Profile image updated successfully';
+      });
+      return;
+    }
 
     var response = await request.send();
 
@@ -136,6 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     fetchProfile();
+    loadProfileImage();  // โหลดข้อมูลโปรไฟล์เมื่อหน้าโหลดใหม่
   }
 
   @override
@@ -178,7 +258,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           radius: 50,
                           backgroundImage: _profileImage != null
                               ? FileImage(_profileImage!)
-                              : AssetImage('assets/default_avatar.png') as ImageProvider,
+                              : (_avatarImagePath != null
+                              ? AssetImage(_avatarImagePath!)
+                              : AssetImage('assets/12.png')) as ImageProvider,
                         ),
                         Container(
                           decoration: BoxDecoration(
@@ -220,7 +302,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     leading: Icon(Icons.person),
                     title: Text('Account'),
                     trailing: Icon(Icons.arrow_forward_ios),
+                    onTap: () {
+                      // นำทางไปยังหน้า AccountScreen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => AccountScreen()),
+                      );
+                    },
                   ),
+
                   ListTile(
                     leading: Icon(Icons.lock),
                     title: Text('Password'),
@@ -268,6 +358,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
+            if (errorMessage.isNotEmpty)
+              Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  errorMessage,
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
           ],
         ),
       ),
